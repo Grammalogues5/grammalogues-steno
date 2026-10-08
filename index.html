@@ -1,0 +1,326 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grammalogues — Steno Practice</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f4f7fb;color:#172033}
+header{background:#123b73;color:#fff;text-align:center;padding:22px 15px}
+header h1{margin:0;font-size:25px}header p{margin:7px 0 0}
+.wrap{max-width:950px;margin:22px auto;padding:0 14px}
+.card{background:#fff;border-radius:14px;padding:18px;margin-bottom:16px;box-shadow:0 3px 14px #00000012}
+h2{margin:0 0 14px;font-size:20px}
+.grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
+button{border:0;border-radius:9px;padding:13px 12px;font-size:15px;cursor:pointer;background:#e8eef7;color:#123b73;font-weight:700}
+button.active{background:#123b73;color:#fff}.primary{background:#16734a;color:#fff}
+.row{display:flex;gap:10px;flex-wrap:wrap}.audio{width:100%;margin-top:8px}
+.timer{font-size:34px;font-weight:800;text-align:center;padding:12px;border-radius:10px;background:#eef3fa;color:#123b73}
+.timer.warning{background:#fff0d9;color:#a55a00}
+textarea{width:100%;min-height:300px;resize:vertical;border:1px solid #cbd5e1;border-radius:10px;padding:14px;font-size:17px;line-height:1.55}
+.notice{font-size:14px;color:#566274;line-height:1.5}.result{display:none}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.stat{background:#f4f7fb;border-radius:10px;padding:12px;text-align:center}.stat b{display:block;font-size:22px;color:#123b73;margin-top:4px}
+#master,#typedResult{display:none;border-radius:10px;padding:14px;white-space:pre-wrap;line-height:1.55}
+#master{background:#fffbe8;border:1px solid #e6d98b}
+#typedResult{background:#f7f9fc;border:1px solid #d7dee8}
+.rulebox{background:#f8fafc;border:1px solid #dbe3ee;border-radius:10px;padding:14px}
+.rulebox h3{margin:0 0 8px}.rulebox ul{margin:8px 0 0;padding-left:20px}
+.error{background:#ffe8e8;color:#8d1717;padding:12px;border-radius:9px;display:none}
+.status-pass{color:#16734a;font-weight:800}.status-fail{color:#b42318;font-weight:800}
+@media(max-width:650px){.grid{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,1fr)}header h1{font-size:21px}}
+</style>
+</head>
+<body>
+<header>
+<h1>Grammalogues — Steno Practice</h1>
+<p>Pre-recorded dictation • 50-minute transcription test</p>
+</header>
+
+<div class="wrap">
+<div class="card">
+<h2>Select Dictation</h2>
+<div id="buttons" class="grid"></div>
+<p id="selectionNote" class="notice">Select a dictation to begin.</p>
+</div>
+
+<div id="error" class="error"></div>
+
+<div id="practice" class="card" style="display:none">
+<h2 id="title">Dictation</h2>
+<audio id="audio" class="audio" controls controlsList="nodownload"></audio>
+<p class="notice">Listen to the pre-recorded dictation and type your transcription below. The 50-minute timer starts automatically when you first type.</p>
+<div id="timer" class="timer">50:00</div>
+</div>
+
+<div id="typingCard" class="card" style="display:none">
+<h2>Your Transcription</h2>
+<textarea id="typing" placeholder="Start typing your transcription here..."></textarea>
+<div class="row" style="margin-top:12px">
+<button class="primary" id="submitBtn">Submit & Check</button>
+<button id="resetBtn">Reset Current Practice</button>
+</div>
+</div>
+
+<div id="result" class="card result">
+<h2>Result</h2>
+<div class="stats">
+<div class="stat">Full Mistakes<b id="fullMistakes">0</b></div>
+<div class="stat">Half Mistakes<b id="halfMistakes">0</b></div>
+<div class="stat">Error %<b id="errorPct">0.00%</b></div>
+<div class="stat">Status<b id="status">—</b></div>
+</div>
+<p class="notice" id="extraLine"></p>
+
+<h3>Your Typed Passage</h3>
+<div id="typedResult"></div>
+
+<div class="row" style="margin-top:12px">
+<button id="showMasterBtn">Show Master Passage</button>
+</div>
+<div id="master"></div>
+</div>
+
+<div class="card">
+<h2>SSC Stenography Skill Test — Mistake Rules</h2>
+<div class="rulebox">
+<h3>1. FULL MISTAKES</h3>
+<ul>
+<li><b>Omission:</b> Every omission of a word or figure. If a group of words is omitted, count as many mistakes as the actual number of omitted words.</li>
+<li><b>Substitution:</b> Every substitution of a wrong word or figure. For figures, the numeral or the word form is acceptable. The mistakes equal the dictated word(s) not written plus the wrongly substituted word(s).</li>
+<li><b>Addition:</b> Every added word, figure or symbol not occurring in the dictated passage.</li>
+<li><b>Repetition:</b> Repetition of a word.</li>
+<li><b>Incomplete word:</b> Every incomplete word.</li>
+<li><b>Left-over words:</b> All left-over words of the passage.</li>
+<li><b>Abbreviation:</b> Candidates must type the actual words as dictated. An abbreviation used for an expanded word, or vice versa, is a full mistake.</li>
+<li><b>Capital letters:</b> Words or lines typed in all CAPITAL letters are counted as full mistakes.</li>
+</ul>
+</div>
+<br>
+<div class="rulebox">
+<h3>2. HALF MISTAKES</h3>
+<ul>
+<li>Wrong spelling.</li>
+<li>Using singular for a plural noun and vice versa.</li>
+<li>Omission of a full stop at the end of a sentence, or use of a full stop at the wrong place.</li>
+<li>Using a small letter at the beginning of a sentence.</li>
+<li>Non-capitalisation of proper nouns (name of a person, place, office, etc.).</li>
+</ul>
+</div>
+<br>
+<div class="rulebox">
+<h3>SSC NOTES</h3>
+<ul>
+<li>Words that can be spelt/written in more than one acceptable form are not counted as errors. For example, the SSC guideline gives <b>Honourable, Hon’ble, Hon., honourable and hon.</b> as acceptable forms.</li>
+<li>The guidelines are also applicable to Hindi Stenography Skill Test wherever applicable.</li>
+</ul>
+</div>
+<br>
+<div class="rulebox">
+<h3>Method of Calculation</h3>
+<p><b>Percentage of Errors = (Full Mistakes + Half Mistakes / 2) × 100 ÷ Number of words in the Master Passage</b></p>
+<p>The SSC denominator is selected according to the test speed and duration:</p>
+<ul>
+<li><b>800 words</b> — 80 w.p.m. for 10 minutes</li>
+<li><b>1000 words</b> — 100 w.p.m. for 10 minutes</li>
+<li><b>840 words</b> — 120 w.p.m. for 7 minutes</li>
+<li><b>600 words</b> — 120 w.p.m. for 5 minutes</li>
+</ul>
+<p>Percentage is rounded to <b>two decimal places</b>.</p>
+</div>
+<p class="notice"><b>Important:</b> The website's automatic checker is an SSC-rules-based estimate. Some cases (especially context, acceptable alternative forms, incomplete words and proper nouns) can require human judgment. The SSC rules above are reproduced from the guideline you provided.</p>
+</div></div>
+</div>
+
+<script src="config.js"></script>
+<script>
+let current=null,timerId=null,secondsLeft=3000,started=false,submitted=false;
+const $=id=>document.getElementById(id),config=window.GRAMMALOGUES_CONFIG||{dictations:[]};
+
+function err(x){$("error").textContent=x;$("error").style.display="block"}
+function clearErr(){$("error").style.display="none"}
+
+function render(){
+  let box=$("buttons"); box.innerHTML="";
+  (config.dictations||[]).forEach((d,i)=>{
+    let b=document.createElement("button");
+    b.textContent=d.title||`Transcription ${i+1}`;
+    b.onclick=()=>select(i,b); box.appendChild(b);
+  });
+  if(!box.children.length)err("No dictations have been configured yet. Add them in config.js.");
+}
+
+function select(i,b){
+  clearErr(); current=config.dictations[i]; submitted=false; started=false; stop();
+  secondsLeft=3000; update();
+  document.querySelectorAll("#buttons button").forEach(x=>x.classList.remove("active"));
+  b.classList.add("active"); $("title").textContent=current.title;
+  $("audio").src=current.audio; $("typing").value="";
+  $("practice").style.display="block"; $("typingCard").style.display="block";
+  $("result").style.display="none"; $("typedResult").style.display="none";
+  $("master").style.display="none"; $("selectionNote").textContent="Selected: "+current.title;
+  $("typing").disabled=false; $("typing").focus();
+}
+
+function start(){
+  if(started||submitted)return;
+  started=true;
+  timerId=setInterval(()=>{
+    secondsLeft--; update();
+    if(secondsLeft<=0){stop();submit(true)}
+  },1000);
+}
+function stop(){if(timerId){clearInterval(timerId);timerId=null}}
+function update(){
+  let m=String(Math.floor(secondsLeft/60)).padStart(2,"0");
+  let s=String(secondsLeft%60).padStart(2,"0");
+  $("timer").textContent=m+":"+s;
+  $("timer").classList.toggle("warning",secondsLeft<=300);
+}
+$("typing").addEventListener("input",start);
+
+function cleanWord(w){
+  return w.toLowerCase().replace(/[“”‘’]/g,"'").replace(/[^\p{L}\p{N}']/gu,"");
+}
+function words(s){
+  return s.trim().split(/\s+/).filter(Boolean);
+}
+function isAllCapsWord(w){
+  let letters=(w.match(/[A-Za-z]/g)||[]).join("");
+  return letters.length>=2 && letters===letters.toUpperCase();
+}
+function singularPluralSimilar(a,b){
+  let x=cleanWord(a),y=cleanWord(b);
+  if(!x||!y)return false;
+  if(x===y)return true;
+  if(x+"s"===y||y+"s"===x)return true;
+  if(x.endsWith("s")&&x.slice(0,-1)===y)return true;
+  if(y.endsWith("s")&&y.slice(0,-1)===x)return true;
+  return false;
+}
+function levenshtein(a,b){
+  let prev=Array.from({length:b.length+1},(_,i)=>i);
+  for(let i=1;i<=a.length;i++){
+    let cur=[i];
+    for(let j=1;j<=b.length;j++)
+      cur[j]=Math.min(cur[j-1]+1,prev[j]+1,prev[j-1]+(a[i-1]===b[j-1]?0:1));
+    prev=cur;
+  }
+  return prev[b.length];
+}
+function analyze(masterText,typedText){
+  let m=words(masterText), t=words(typedText);
+  let full=0,half=0;
+  let i=0,j=0;
+
+  while(i<m.length && j<t.length){
+    let mw=m[i],tw=t[j], mc=cleanWord(mw),tc=cleanWord(tw);
+
+    if(mc===tc){
+      if(isAllCapsWord(tw) && /[A-Za-z]/.test(tw)) full++;
+      else if(mw!==tw) half++;
+      i++;j++;continue;
+    }
+
+    if(singularPluralSimilar(mw,tw)){
+      half++; i++;j++; continue;
+    }
+
+    // Look ahead for an omitted master word.
+    if(i+1<m.length && cleanWord(m[i+1])===tc){
+      full++; i++; continue;
+    }
+    // Look ahead for an extra typed word.
+    if(j+1<t.length && cleanWord(mw)===cleanWord(t[j+1])){
+      full++; j++; continue;
+    }
+
+    // Same-looking word with a spelling difference -> half; otherwise substitution -> full.
+    if(mc && tc && levenshtein(mc,tc)<=1) half++;
+    else full++;
+    i++;j++;
+  }
+
+  if(i<m.length) full += (m.length-i); // leftover/omitted master words
+  if(j<t.length) full += (t.length-j); // extra typed words
+
+  // Basic repeated-word detection in typed text.
+  for(let k=1;k<t.length;k++){
+    if(cleanWord(t[k]) && cleanWord(t[k])===cleanWord(t[k-1])) full++;
+  }
+
+  return {full,half,total:m.length};
+}
+
+function getSSCDenominator(){
+  // Prefer explicit SSC configuration for this dictation.
+  if(current && Number(current.sscWords)>0) return Number(current.sscWords);
+
+  const speed=Number(current && current.speed);
+  const mins=Number(current && (current.durationMinutes || current.dictationMinutes));
+  if(speed && mins) return Math.round(speed*mins);
+
+  // Default for the current 10-minute practice if no speed is configured.
+  return 1000;
+}
+
+function submit(auto){
+  if(!current||submitted)return;
+  if(!current.master){err("This dictation has no master passage configured.");return}
+  submitted=true; stop();
+
+  const typed=$("typing").value;
+  const r=analyze(current.master,typed);
+  const denominator=getSSCDenominator();
+  const errorPct=Math.round(((r.full + r.half/2)*100/denominator + Number.EPSILON)*100)/100;
+  const limit=(Number(current && current.qualifyingErrorLimit)>0)
+    ? Number(current.qualifyingErrorLimit)
+    : null;
+  const pass=limit===null ? null : errorPct<=limit;
+
+  $("fullMistakes").textContent=r.full;
+  $("halfMistakes").textContent=r.half;
+  $("errorPct").textContent=errorPct.toFixed(2)+"%";
+  $("status").innerHTML = limit===null
+    ? `<span>${errorPct.toFixed(2)}%</span>`
+    : `<span class="${pass?"status-pass":"status-fail"}">${pass?"QUALIFIED":"NOT QUALIFIED"}</span>`;
+  $("extraLine").textContent=`${auto?"Time is over; your test was submitted automatically.":"Submission complete."} SSC calculation denominator: ${denominator} words${limit===null?".":`. Configured qualifying limit: ${limit}%.`}`;
+
+  $("typedResult").textContent=typed||"[No transcription entered]";
+  $("typedResult").style.display="block";
+  $("result").style.display="block";
+  $("master").style.display="none";
+  $("showMasterBtn").textContent="Show Master Passage";
+
+  // Prevent editing after submission/time expiry, while showing the typed passage below.
+  $("typing").disabled=true;
+  $("submitBtn").disabled=true;
+
+  window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+
+$("submitBtn").onclick=()=>submit(false);
+
+$("resetBtn").onclick=()=>{
+  if(!current)return;
+  submitted=false; started=false; stop(); secondsLeft=3000; update();
+  $("typing").value=""; $("typing").disabled=false; $("submitBtn").disabled=false;
+  $("result").style.display="none"; $("typedResult").style.display="none";
+  $("master").style.display="none"; $("showMasterBtn").textContent="Show Master Passage";
+  $("typing").focus();
+};
+
+$("showMasterBtn").onclick=()=>{
+  if($("master").style.display==="block"){
+    $("master").style.display="none"; $("showMasterBtn").textContent="Show Master Passage";
+  }else{
+    $("master").textContent=current?current.master:"";
+    $("master").style.display="block"; $("showMasterBtn").textContent="Hide Master Passage";
+  }
+};
+
+render(); update();
+</script>
+</body>
+</html>
