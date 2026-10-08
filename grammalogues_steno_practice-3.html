@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grammalogues — Steno Dictation Practice</title>
+<style>
+:root{--blue:#1459a6;--blue2:#0d3f78;--light:#f4f7fb;--border:#d7dee8;--green:#16834b;--red:#c62828;--orange:#b76500}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,Helvetica,sans-serif;background:var(--light);color:#17202a}
+header{background:linear-gradient(135deg,var(--blue2),var(--blue));color:#fff;padding:18px 22px}
+header h1{margin:0;font-size:24px}header p{margin:6px 0 0;opacity:.9}
+.container{max-width:1200px;margin:auto;padding:18px}
+.card{background:#fff;border:1px solid var(--border);border-radius:12px;padding:18px;margin-bottom:16px;box-shadow:0 2px 8px #0000000b}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}.full{grid-column:1/-1}
+label{font-weight:700;display:block;margin-bottom:7px}
+textarea,input[type=text]{width:100%;border:1px solid var(--border);border-radius:8px;padding:11px;font:inherit}
+textarea{min-height:170px;resize:vertical}
+button{border:0;border-radius:8px;padding:11px 16px;font-weight:700;cursor:pointer;margin:4px}
+.primary{background:var(--blue);color:#fff}.secondary{background:#e9eef5;color:#18324d}.danger{background:#b91c1c;color:#fff}
+.status{display:flex;gap:12px;flex-wrap:wrap;align-items:center}
+.pill{padding:8px 12px;border-radius:999px;background:#eef3f9;font-weight:700}.timer{font-size:28px;font-variant-numeric:tabular-nums;color:var(--blue2)}
+#typing{min-height:360px;font-size:18px;line-height:1.65}
+.hidden{display:none!important}
+.notice{background:#fff8e7;border-left:4px solid #e5a000;padding:11px 13px;border-radius:6px}
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}.stat{background:#f7f9fc;border:1px solid var(--border);border-radius:9px;padding:12px;text-align:center}.stat b{display:block;font-size:23px}
+.diff{line-height:1.8;font-size:17px;white-space:pre-wrap}.correct{background:#dff4e7}.wrong{background:#ffe0e0;text-decoration:underline;text-decoration-color:var(--red)}.missing{background:#fff0c9;color:#7a4a00}.extra{background:#ffd8d8;color:#8b0000}
+.rules li{margin:8px 0}
+details summary{cursor:pointer;font-weight:700}
+@media(max-width:760px){.grid{grid-template-columns:1fr}.full{grid-column:auto}.stats{grid-template-columns:repeat(2,1fr)}header h1{font-size:20px}}
+</style>
+</head>
+<body>
+<header>
+  <h1>Grammalogues — Steno Dictation Practice</h1>
+  <p>10-minute pre-recorded dictation • 50-minute transcription • Master passage & rule-based checking</p>
+</header>
+
+<div class="container">
+  <div class="card">
+    <div class="grid">
+      <div>
+        <label for="audio">1. Pre-recorded Dictation (MP3)</label>
+        <input id="audio" type="file" accept="audio/*">
+        <audio id="player" controls style="width:100%;margin-top:10px"></audio>
+        <div class="notice" style="margin-top:10px">The 50-minute timer starts automatically when the student begins typing in the transcription box.</div>
+      </div>
+      <div>
+        <label for="title">Practice title</label>
+        <input id="title" type="text" value="Steno Dictation Practice">
+        <label for="master" style="margin-top:14px">Master Passage</label>
+        <textarea id="master" placeholder="Paste/type the exact master passage here. It can be hidden from the student until submission."></textarea>
+      </div>
+    </div>
+    <div style="margin-top:10px">
+      <button class="primary" id="startBtn">Start / Reset Practice</button>
+      <button class="secondary" id="revealBtn">Show Master Passage</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="status">
+      <span class="pill">Dictation: <b id="audioTime">00:00 / 00:00</b></span>
+      <span class="pill">Transcription Time Remaining: <span class="timer" id="timer">50:00</span></span>
+      <span class="pill" id="state">Not started</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <label for="typing">2. Type your transcription here</label>
+    <textarea id="typing" disabled placeholder="Press Start / Reset Practice, then begin typing here..."></textarea>
+    <div style="margin-top:10px">
+      <button class="primary" id="submitBtn" disabled>Submit & Check</button>
+      <button class="danger" id="finishBtn" disabled>Finish Test</button>
+    </div>
+  </div>
+
+  <div class="card hidden" id="results">
+    <h2>3. Result</h2>
+    <div class="stats">
+      <div class="stat"><b id="accuracy">0%</b>Accuracy</div>
+      <div class="stat"><b id="typedWords">0</b>Typed Words</div>
+      <div class="stat"><b id="masterWords">0</b>Master Words</div>
+      <div class="stat"><b id="errors">0</b>Errors</div>
+      <div class="stat"><b id="omissions">0</b>Omissions</div>
+    </div>
+    <h3>Word-by-word comparison</h3>
+    <div id="diff" class="diff"></div>
+  </div>
+
+  <div class="card hidden" id="masterCard">
+    <h2>4. Master Passage</h2>
+    <div id="masterDisplay" style="line-height:1.8;white-space:pre-wrap"></div>
+  </div>
+
+  <div class="card">
+    <details>
+      <summary>5. Rule Book / Checking Rules</summary>
+      <ul class="rules">
+        <li><b>Exact word match:</b> A correctly typed word is counted as correct.</li>
+        <li><b>Wrong word:</b> A different word in the same position is counted as an error.</li>
+        <li><b>Omission:</b> A word present in the master but missing from the transcription is counted as an omission.</li>
+        <li><b>Extra word:</b> A word typed by the student that is not required by the master is counted as an extra word.</li>
+        <li><b>Punctuation:</b> Punctuation is ignored for the basic word-accuracy calculation; the comparison is word-based.</li>
+        <li><b>Capitalization:</b> Capital letters are ignored for the basic word-accuracy calculation.</li>
+        <li><b>Whitespace:</b> Multiple spaces and line breaks are treated as normal word separators.</li>
+        <li><b>Timer:</b> The 50-minute clock begins with the first typing activity after Start and stops at submission/finish or when time reaches zero.</li>
+      </ul>
+    </details>
+  </div>
+</div>
+
+<script>
+const audio=document.getElementById('audio'),player=document.getElementById('player');
+const master=document.getElementById('master'),typing=document.getElementById('typing');
+const startBtn=document.getElementById('startBtn'),submitBtn=document.getElementById('submitBtn'),finishBtn=document.getElementById('finishBtn');
+const timerEl=document.getElementById('timer'),state=document.getElementById('state'),results=document.getElementById('results');
+const masterCard=document.getElementById('masterCard'),masterDisplay=document.getElementById('masterDisplay');
+let timer=null, remaining=3000, running=false, startedTyping=false;
+
+audio.addEventListener('change',()=>{const f=audio.files[0]; if(f){player.src=URL.createObjectURL(f);}});
+player.addEventListener('timeupdate',()=>{document.getElementById('audioTime').textContent=fmt(player.currentTime)+' / '+fmt(player.duration||0);});
+function fmt(sec){sec=Math.max(0,Math.floor(sec));return String(Math.floor(sec/60)).padStart(2,'0')+':'+String(sec%60).padStart(2,'0')}
+function setTimer(){timerEl.textContent=fmt(remaining);}
+
+function reset(){
+ clearInterval(timer);timer=null;remaining=3000;running=false;startedTyping=false;
+ setTimer();typing.value='';typing.disabled=false;submitBtn.disabled=false;finishBtn.disabled=false;
+ results.classList.add('hidden');masterCard.classList.add('hidden');state.textContent='Ready — start typing to begin 50-minute timer';
+ typing.focus();
+}
+startBtn.addEventListener('click',reset);
+
+typing.addEventListener('input',()=>{
+ if(!running && typing.value.trim().length>0){
+   running=true; startedTyping=true; state.textContent='Timer running';
+   timer=setInterval(()=>{
+     remaining--;setTimer();
+     if(remaining<=0){clearInterval(timer);running=false;state.textContent='Time finished';typing.disabled=true;submit();}
+   },1000);
+ }
+});
+
+function words(s){
+ return s.trim().toLowerCase().replace(/[“”‘’]/g,"'").replace(/["]/g,'"')
+   .replace(/[.,!?;:()[\]{}]/g,' ').split(/\s+/).filter(Boolean);
+}
+
+function compare(masterWords, typedWords){
+ const n=masterWords.length,m=typedWords.length;
+ // Levenshtein-style word alignment
+ const dp=Array.from({length:n+1},()=>Array(m+1).fill(0));
+ for(let i=0;i<=n;i++)dp[i][0]=i;
+ for(let j=0;j<=m;j++)dp[0][j]=j;
+ for(let i=1;i<=n;i++)for(let j=1;j<=m;j++){
+   const cost=masterWords[i-1]===typedWords[j-1]?0:1;
+   dp[i][j]=Math.min(dp[i-1][j]+1,dp[i][j-1]+1,dp[i-1][j-1]+cost);
+ }
+ let i=n,j=m,out=[];
+ while(i>0||j>0){
+   if(i>0&&j>0&&masterWords[i-1]===typedWords[j-1]){
+     out.unshift({type:'correct',a:masterWords[i-1],b:typedWords[j-1]});i--;j--;
+   }else if(i>0&&j>0&&dp[i][j]===dp[i-1][j-1]+1){
+     out.unshift({type:'wrong',a:masterWords[i-1],b:typedWords[j-1]});i--;j--;
+   }else if(i>0&&dp[i][j]===dp[i-1][j]+1){
+     out.unshift({type:'missing',a:masterWords[i-1],b:''});i--;
+   }else{
+     out.unshift({type:'extra',a:'',b:typedWords[j-1]});j--;
+   }
+ }
+ return out;
+}
+function esc(x){return x.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));}
+
+function submit(){
+ clearInterval(timer);running=false;typing.disabled=true;submitBtn.disabled=true;finishBtn.disabled=true;
+ state.textContent='Submitted — results ready';
+ const mw=words(master.value),tw=words(typing.value),ops=compare(mw,tw);
+ let correct=0,errors=0,omissions=0,extras=0;
+ ops.forEach(o=>{if(o.type==='correct')correct++;else if(o.type==='missing'){errors++;omissions++;}else if(o.type==='extra'){errors++;extras++;}else{errors++;}});
+ const accuracy=mw.length?Math.max(0,(correct/mw.length)*100):0;
+ document.getElementById('accuracy').textContent=accuracy.toFixed(2)+'%';
+ document.getElementById('typedWords').textContent=tw.length;
+ document.getElementById('masterWords').textContent=mw.length;
+ document.getElementById('errors').textContent=errors;
+ document.getElementById('omissions').textContent=omissions;
+ document.getElementById('diff').innerHTML=ops.map(o=>{
+   if(o.type==='correct')return '<span class="correct">'+esc(o.a)+'</span> ';
+   if(o.type==='wrong')return '<span class="wrong" title="Master: '+esc(o.a)+'">'+esc(o.b||'—')+'</span> ';
+   if(o.type==='missing')return '<span class="missing" title="Omitted from transcription">['+esc(o.a)+']</span> ';
+   return '<span class="extra" title="Extra word">'+esc(o.b)+'</span> ';
+ }).join('');
+ results.classList.remove('hidden');
+ window.scrollTo({top:results.offsetTop-10,behavior:'smooth'});
+}
+submitBtn.addEventListener('click',submit);
+finishBtn.addEventListener('click',submit);
+document.getElementById('revealBtn').addEventListener('click',()=>{
+ masterDisplay.textContent=master.value||'No master passage entered.';
+ masterCard.classList.remove('hidden');
+});
+setTimer();
+</script>
+</body>
+</html>
